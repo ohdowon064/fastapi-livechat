@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 from fastapi import Cookie, Depends, FastAPI, Query, WebSocketDisconnect, status
 from fastapi.websockets import WebSocket
 from fastapi.requests import Request
@@ -19,13 +19,16 @@ async def root(request: Request):
 class ConnectionManager:
     def __init__(self) -> None:
         self.active_connections: List[WebSocket] = []
+        self.client_list: Dict[str, str] = {}
     
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket, token: str, nickname: str):
         await websocket.accept()
         self.active_connections.append(websocket)
+        self.client_list[token] = nickname
         
-    def disconnect(self, websocket: WebSocket):
+    def disconnect(self, websocket: WebSocket, token: str):
         self.active_connections.remove(websocket)
+        self.client_list.pop(token)
         
     async def send_personal_message(self, message: str, websocket: WebSocket):
         await websocket.send_text(message)
@@ -36,20 +39,19 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
-@app.websocket("/ws/{client_id}")
-async def websocket_endpoint(websocket: WebSocket, client_id: str):
-    await manager.connect(websocket)
-    await manager.broadcast(f"{client_id} Into the chat room")
+@app.websocket("/ws/{token}/{nickname}")
+async def websocket_endpoint(websocket: WebSocket, token: str, nickname: str):
+    await manager.connect(websocket, token, nickname)
+    await manager.broadcast(f"[{nickname}({token[-6:]})] Into the chat room")
     
     try:
         while True:
             data = await websocket.receive_text()
-            await manager.broadcast(f"{client_id} send a message: {data}")
-            await manager.send_personal_message(f"Server reply {client_id}: The message you sent is: {data}", websocket)
+            await manager.broadcast(f"[{nickname}({token[-6:]})]: {data}")
     
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
-        await manager.broadcast(f"{client_id} Left the chat room")
+        manager.disconnect(websocket, token)
+        await manager.broadcast(f"[{nickname}({token[-6:]})] Left the chat room")
     
 
 

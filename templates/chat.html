@@ -6,31 +6,43 @@
     <body>
         <h1>Live Chat</h1>
         <h2>Your ID: <span id="ws-id"></span></h2>
-        <form action="" onsubmit="sendMessage(event)">
-            <input type="text" id="messageText" autocomplete="off"/>
-            <button>Send</button>
+        <form>
+            <label>Your Name: <input type="text" id="nickname" autocomplete="off" placeholder="Enter Your Name"/></label>
+            <input type="submit" id="connectBtn" value="Connect"/>
         </form>
-    <ul id="messages"></ul>
+        <form>
+            <hr>
+            <input type="text" id="messageText" autocomplete="off"/>
+            <input type="submit" id="sendBtn" value="Send"/>
+        </form>
+        <ul id="messages"></ul>
     </body>
-    <script>
-        const clientId = Date.now();
-        document.querySelector("#ws-id").textContent = clientId;
-        const wsUrl = `ws://localhost:8000/ws/${clientId}`;
-        const ws = new WebSocket(wsUrl);
-
-        ws.onmessage = function(event) {
-            const messages = document.querySelector("#messages");
-            const message = document.createElement("li");
-            const content = document.createTextNode(event.data);
-            message.appendChild(content);
-            messages.appendChild(message);
-        };
-
-        function sendMessage(event) {
+    <script>        
+        let ws = null;
+        const connectBtn = document.querySelector("#connectBtn");
+        connectBtn.onclick = (event) => {
             event.preventDefault();
-            const input = document.getElementById("messageText");
+            const token = Date.now();
+            const nickname = document.querySelector("#nickname").value;
+            const wsUrl = `ws://localhost:8000/ws/${token}/${nickname}`;
+            ws = new WebSocket(wsUrl);
+
+            ws.onmessage = (event) => {
+                const messages = document.querySelector("#messages");
+                const message = document.createElement("li");
+                const content = document.createTextNode(event.data);
+                message.appendChild(content);
+                messages.appendChild(message);
+            };
+        };
+        
+        
+        const sendBtn = document.querySelector("#sendBtn");
+        sendBtn.onclick = (event) => {
+            event.preventDefault();
+            const input = document.querySelector("#messageText");
             ws.send(input.value)
             input.value = ""
-        }
+        };
     </script>
 </html>
