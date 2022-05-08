@@ -5,10 +5,10 @@
     </head>
     <body>
         <h1>Live Chat</h1>
-        <form action="" onsubmit="sendMessage()">
+        <form action="" onsubmit="sendMessage(event)">
             <label>Item ID: <input type="text" id="itemId" autocomplete="off" value="foo"/></label>
             <label>Token: <input type="text" id="token" autocomplete="off" value="some-key-token"/></label>
-            <button onclick="connect()">Connect</button>
+            <button onclick="connect(event)">Connect</button>
             <hr>
             <label>Message: <input type="text" id="messageText" autocomplete="off"/></label>
             <button>Send</button>
@@ -20,7 +20,7 @@
         function connect(event) {
             event.preventDefault();
             const itemId = document.querySelector("#itemId");
-            const token = document.querySelector("token");
+            const token = document.querySelector("#token");
             const wsUrl = `ws://localhost:8000/items/${itemId.value}/ws?token=${token.value}`;
             ws = new WebSocket(wsUrl);
             ws.onmessage = function(event) {
@@ -32,8 +32,8 @@
             };
         }
         function sendMessage(event) {
-            event.preventDefault()
-            let input = document.getElementById("messageText");
+            event.preventDefault();
+            const input = document.getElementById("messageText");
             ws.send(input.value)
             input.value = ""
         }
