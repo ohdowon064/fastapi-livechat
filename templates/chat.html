@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>K-Drama Live Chat</title>
+    </head>
+    <body>
+        <h1>Live Chat</h1>
+        <form action="" onsubmit="sendMessage()">
+            <label>Item ID: <input type="text" id="itemId" autocomplete="off" value="foo"/></label>
+            <label>Token: <input type="text" id="token" autocomplete="off" value="some-key-token"/></label>
+            <button onclick="connect()">Connect</button>
+            <hr>
+            <label>Message: <input type="text" id="messageText" autocomplete="off"/></label>
+            <button>Send</button>
+        </form>
+    <ul id="messages"></ul>
+    </body>
+    <script>
+        let ws = null;
+        function connect(event) {
+            event.preventDefault();
+            const itemId = document.querySelector("#itemId");
+            const token = document.querySelector("token");
+            const wsUrl = `ws://localhost:8000/items/${itemId.value}/ws?token=${token.value}`;
+            ws = new WebSocket(wsUrl);
+            ws.onmessage = function(event) {
+                const messages = document.querySelector("#messages");
+                const message = document.createElement("li");
+                const content = document.createTextNode(event.data);
+                message.appendChild(content);
+                messages.appendChild(message);
+            };
+        }
+        function sendMessage(event) {
+            event.preventDefault()
+            let input = document.getElementById("messageText");
+            ws.send(input.value)
+            input.value = ""
+        }
+    </script>
+</html>
